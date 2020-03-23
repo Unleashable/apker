@@ -7,7 +7,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var flags = []cli.Flag{
+// Global cli flags
+var Flags = []cli.Flag{
 	&cli.StringFlag{
 		Name:    "pub",
 		Aliases: []string{"p"},
