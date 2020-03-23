@@ -8,11 +8,32 @@ import (
 	"os"
 
 	"github.com/unleashable/apker/cmd"
+	"github.com/urfave/cli/v2"
 )
+
+var app *cli.App
+
+func init() {
+
+	app = &cli.App{
+		Name:     "apker",
+		Usage:    "deploy custom images in seconds.",
+		Version:  "v0.0.1",
+		Flags:    cmd.Flags,
+		Commands: cmd.Commands,
+		Authors: []*cli.Author{
+			&cli.Author{
+				Name:  "Mohamed Elbahja",
+				Email: "bm9qdW5r@gmail.com",
+			},
+		},
+	}
+
+}
 
 func main() {
 
-	if e := cmd.Run(os.Args); e != nil {
+	if e := app.Run(os.Args); e != nil {
 		log.Fatal(e)
 	}
 }
