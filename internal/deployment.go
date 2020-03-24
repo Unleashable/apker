@@ -88,7 +88,7 @@ func stepToCommand(step string) (c string, e error) {
 
 	case "copy":
 		// TODO: backslash (") chars in parts[n]
-		c = `cd /tmp/apker && mkdir -p "` + parts[2] + `" && cp ` + parts[1] + ` "` + parts[1] + `"`
+		c = `cd /tmp/apker && mkdir -p "` + parts[2] + `" && cp ` + parts[1] + ` "` + parts[2] + `"`
 		break
 
 	case "reboot":
