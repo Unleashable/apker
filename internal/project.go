@@ -23,7 +23,8 @@ type PrivateSSHKey struct {
 
 type Project struct {
 	Config
-	AddrV4     string
+	Addr       string
+	User       string
 	Repo       string
 	Name       string
 	Path       string
@@ -32,15 +33,15 @@ type Project struct {
 	PrivateKey PrivateSSHKey
 }
 
-func (project *Project) Deploy(user string, outHandler OutputHandler, errHandler OutputHandler) error {
+func (project *Project) Deploy(outHandler OutputHandler, errHandler OutputHandler) error {
 
-	if user == "" {
-		user = "root"
+	if project.User == "" {
+		project.User = "root"
 	}
 
 	client, e := ssh.New(ssh.Config{
-		User: user,
-		Addr: project.AddrV4,
+		User: project.User,
+		Addr: project.Addr,
 		Config: &sh.ClientConfig{
 			Timeout: 20 * time.Second,
 		},
