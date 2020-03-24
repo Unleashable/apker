@@ -133,6 +133,8 @@ func Deploy(c *cli.Context) (e error) {
 
 	// Project name
 	project.Name = c.String("name")
+	// SSH user
+	project.User = c.String("user")
 
 	if project.Name == "" && project.Config.Name != "" {
 		project.Name = "apker-image-" + project.Config.Name
@@ -267,10 +269,7 @@ MachineLoop:
 
 		case <-installTimeout:
 
-			//
 			// By default it's 0 no timeout!
-			//
-
 			if int(c.Duration("timeout")) != 0 {
 
 				sp.Stop()
@@ -304,7 +303,7 @@ MachineLoop:
 
 		time.Sleep(5 * time.Second)
 
-		if utils.IsPortOpen(project.AddrV4+":22", 5) {
+		if utils.IsPortOpen(project.Addr+":22", 5) {
 			break
 		}
 	}
@@ -312,7 +311,7 @@ MachineLoop:
 	// Deploy steps spinner!
 	sp.Suffix = " Running deploy steps..."
 
-	e = project.Deploy(c.String("user"), stdout(sp), stderr(sp))
+	e = project.Deploy(stdout(sp), stderr(sp))
 
 	sp.Stop()
 
