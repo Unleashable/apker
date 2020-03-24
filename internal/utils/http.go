@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 )
 
 func GetContentFromUrl(url string) (content []byte, e error) {
@@ -28,4 +29,15 @@ func GetContentFromUrl(url string) (content []byte, e error) {
 	content, e = ioutil.ReadAll(res.Body)
 
 	return
+}
+
+func IsUrl(u string) bool {
+
+	if u == "" {
+		return false
+	}
+
+	_, err := url.ParseRequestURI(u)
+
+	return err == nil
 }
