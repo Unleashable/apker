@@ -11,6 +11,7 @@ import (
 
 	"github.com/digitalocean/godo"
 	"github.com/unleashable/apker/internal"
+	"github.com/unleashable/apker/internal/utils"
 	"golang.org/x/oauth2"
 )
 
@@ -37,8 +38,7 @@ func (t *TokenSource) Token() (*oauth2.Token, error) {
 func (do *Digitalocean) SetupMachine(ch chan internal.MachineStatus, attrs internal.Attributes) {
 
 	var (
-		e error
-		// ctx context.Context
+		e            error
 		image        *godo.Image
 		droplet      *godo.Droplet
 		dropletImage godo.DropletCreateImage = godo.DropletCreateImage{}
@@ -57,7 +57,7 @@ func (do *Digitalocean) SetupMachine(ch chan internal.MachineStatus, attrs inter
 			IsImageReady: true,
 		}
 
-	} else if do.Project.Config.Image.From != "" && false {
+	} else if utils.IsUrl(do.Project.Config.Image.From) {
 
 		// Create image from url
 		image, e = do.CreateCustomImage(&godo.CustomImageCreateRequest{
@@ -147,7 +147,7 @@ func (do *Digitalocean) SetupMachine(ch chan internal.MachineStatus, attrs inter
 
 		if len(droplet.Networks.V4) > 0 {
 
-			do.Project.AddrV4, _ = droplet.PublicIPv4()
+			do.Project.Addr, _ = droplet.PublicIPv4()
 		}
 
 		ch <- internal.MachineStatus{
@@ -206,7 +206,7 @@ func NewDigitalocean(p *internal.Project) (*Digitalocean, error) {
 
 	if _, ok := p.Config.Provider.Credentials["API_KEY"]; !ok {
 
-		return &Digitalocean{}, errors.New("API_KEY is required!")
+		return nil, errors.New("API_KEY is required!")
 	}
 
 	tokenSource := &TokenSource{
