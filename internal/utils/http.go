@@ -8,11 +8,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
-func GetContentFromUrl(url string) (content []byte, e error) {
+func GetContentFromUrl(url string, auth string) (content []byte, e error) {
 
-	res, e := http.Get(url)
+	res, e := http.Get(UrlAuth(url, auth))
 
 	if e != nil {
 		return
@@ -40,4 +41,13 @@ func IsUrl(u string) bool {
 	_, err := url.ParseRequestURI(u)
 
 	return err == nil
+}
+
+func UrlAuth(url string, auth string) string {
+
+	if auth != "" {
+		return strings.Replace(url, "https://", "https://"+auth+"@", 1)
+	}
+
+	return url
 }
