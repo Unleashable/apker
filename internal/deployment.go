@@ -5,12 +5,20 @@ package internal
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	"github.com/melbahja/ssh"
+	"github.com/unleashable/apker/internal/utils"
 )
 
 type OutputHandler func(description string, log *bytes.Buffer) error
+
+type ExecStep struct {
+	Done    string
+	Label   string
+	Command string
+}
 
 type Deployment struct {
 	SSH           *ssh.Client
@@ -21,59 +29,69 @@ type Deployment struct {
 
 func (d *Deployment) Run() (e error) {
 
-	var (
-		cmd = ssh.Command{
-			Client: d.SSH,
-		}
-		clone = "run git clone " + d.Project.Repo + " /tmp/apker/"
-	)
+	steps := []ExecStep{}
 
-	// Install requirements
 	for _, command := range d.Project.Config.Setup {
 
-		cmd.Command = command
-
-		if e = d.exec("Setup: "+command, &cmd); e != nil {
-			return
-		}
+		steps = append(steps, ExecStep{
+			Done:    fmt.Sprintf("Setup: %s", command),
+			Label:   fmt.Sprintf("Running setup command: %s", command),
+			Command: command,
+		})
 	}
 
-	// Ok! pre deploy commands makes our sexy machine ready 💦.
-	// You know what let's me check you first
-	cmd.Command = "which git && git --version"
+	steps = append(steps, ExecStep{
+		Done:    "Requirements: git and rsync installed!",
+		Label:   "Verifying requirements...",
+		Command: "which git rsync && git --version && rsync --version",
+	}, ExecStep{
+		Done:    "Project cloned successfully on: /tmp/apker",
+		Label:   fmt.Sprintf("Cloning project repository: %s", d.Project.Repo),
+		Command: fmt.Sprintf("git clone %s /tmp/apker/", utils.UrlAuth(d.Project.Repo, d.Project.Auth)),
+	})
 
-	if e = d.exec("Requirements", &cmd); e != nil {
-		return
-	}
+	var command string
 
-	// Hmmm, let's do it 😋
-	for _, step := range append([]string{clone}, d.Project.Config.Deploy.Steps...) {
+	for _, step := range d.Project.Config.Deploy.Steps {
 
-		if cmd.Command, e = stepToCommand(step); e != nil {
+		if command, e = stepToCommand(step); e != nil {
 			return
 		}
 
-		if e = d.exec(step, &cmd); e != nil {
-			return
-		}
+		steps = append(steps, ExecStep{
+			Done:    fmt.Sprintf("Step: %s", step),
+			Label:   fmt.Sprintf("Running: %s", step),
+			Command: command,
+		})
 	}
 
-	return nil
+	return d.exec(steps)
 }
 
-func (d *Deployment) exec(label string, cmd *ssh.Command) (e error) {
+func (d Deployment) exec(steps []ExecStep) (e error) {
 
-	var result ssh.Result
+	var (
+		result ssh.Result
+		cmd    = ssh.Command{
+			Client: d.SSH,
+		}
+	)
 
-	d.StdoutHandler("", bytes.NewBufferString(cmd.Command))
+	for _, step := range steps {
 
-	if result, e = cmd.Run(); e != nil {
+		d.StdoutHandler("", bytes.NewBufferString(step.Label))
 
-		d.StderrHandler("✔ "+label, &result.Stdout)
-		return
+		cmd.Command = step.Command
+
+		if result, e = cmd.Run(); e != nil {
+
+			d.StderrHandler(step.Command, &result.Stderr)
+			return
+		}
+
+		d.StdoutHandler(step.Done, &result.Stdout)
 	}
 
-	d.StdoutHandler(label, &result.Stdout)
 	return
 }
 
@@ -87,8 +105,8 @@ func stepToCommand(step string) (c string, e error) {
 		break
 
 	case "copy":
-		// TODO: backslash (") chars in parts[n]
-		c = `cd /tmp/apker && mkdir -p "` + parts[2] + `" && cp ` + parts[1] + ` "` + parts[2] + `"`
+		// TODO: this part need more work
+		c = `cd /tmp/apker && mkdir -p ` + parts[2] + ` && rsync -a --delete ` + parts[1] + ` ` + parts[2]
 		break
 
 	case "reboot":
