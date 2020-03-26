@@ -11,14 +11,17 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var app *cli.App
+var (
+	app     *cli.App
+	version string
+)
 
 func init() {
 
 	app = &cli.App{
 		Name:     "apker",
 		Usage:    "deploy custom images in seconds.",
-		Version:  "v0.0.1",
+		Version:  version,
 		Flags:    cmd.Flags,
 		Commands: cmd.Commands,
 		Authors: []*cli.Author{

@@ -9,7 +9,7 @@ import (
 	"net/url"
 )
 
-func GitFile(repo string, file string) (content []byte, e error) {
+func GitFile(repo string, file string, auth string) (content []byte, e error) {
 
 	url, e := url.Parse(repo)
 
@@ -19,7 +19,10 @@ func GitFile(repo string, file string) (content []byte, e error) {
 
 	switch url.Host {
 	case "github.com":
-		content, e = getGithubFile(url, file)
+		content, e = getGithubFile(url, file, auth)
+		return
+	case "bitbucket.org":
+		content, e = getBitbucketFile(url, file, auth)
 		return
 	}
 
@@ -28,9 +31,9 @@ func GitFile(repo string, file string) (content []byte, e error) {
 	return
 }
 
-func getGithubFile(url *url.URL, file string) (content []byte, e error) {
+func getGithubFile(url *url.URL, file string, auth string) (content []byte, e error) {
 
-	content, e = GetContentFromUrl(fmt.Sprintf("https://api.github.com/repos%s/contents/%s", url.Path, file))
+	content, e = GetContentFromUrl(fmt.Sprintf("https://api.github.com/repos%s/contents/%s", url.Path, file), auth)
 
 	if e != nil {
 		return
@@ -46,6 +49,12 @@ func getGithubFile(url *url.URL, file string) (content []byte, e error) {
 		return
 	}
 
-	content, e = GetContentFromUrl(dl.URL)
+	content, e = GetContentFromUrl(dl.URL, auth)
 	return
+}
+
+func getBitbucketFile(url *url.URL, file string, auth string) ([]byte, error) {
+
+	// IDK how to get default branch, using master as default!
+	return GetContentFromUrl(fmt.Sprintf("https://api.bitbucket.org/2.0/repositories%s/src/master/%s", url.Path, file), auth)
 }
