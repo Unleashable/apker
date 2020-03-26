@@ -14,6 +14,7 @@ import (
 
 	sp "github.com/briandowns/spinner"
 	"github.com/unleashable/apker/cmd/inputs"
+	"github.com/unleashable/apker/cmd/outputs"
 	"github.com/unleashable/apker/internal"
 	"github.com/unleashable/apker/internal/providers"
 	"github.com/unleashable/apker/internal/utils"
@@ -34,20 +35,24 @@ var DeployFlags = []cli.Flag{
 		Aliases: []string{"location"},
 		Usage:   "Set machine physical location.",
 	},
+	&cli.StringFlag{
+		Name:    "url",
+		Aliases: []string{"repo"},
+		Usage:   "Set project git repository url.",
+	},
 	&cli.BoolFlag{
 		Name:    "passphrase",
-		Aliases: []string{"pass"},
 		Usage:   "Ask for private key passphrase for protected keys.",
 	},
 	&cli.DurationFlag{
 		Name:    "timeout",
 		Aliases: []string{"t"},
-		Usage:   "Set timeout for apker to wait for image (e.g: 12s).",
+		Usage:   "Set timeout duration (e.g: 30s) to wait for image to be ready.",
 	},
 	&cli.BoolFlag{
 		Name:    "no-timeout-error",
 		Aliases: []string{"nt"},
-		Usage:   "Exit on timeout without error status.",
+		Usage:   "When timeout exit without error code.",
 	},
 	&cli.IntFlag{
 		Name:  "id",
@@ -57,11 +62,10 @@ var DeployFlags = []cli.Flag{
 		Name:  "image",
 		Usage: "Create machine/droplet from specific image `id`.",
 	},
-	// TODO
 	// &cli.StringFlag{
 	// 	Name:    "addr",
 	// 	Aliases: []string{"ip"},
-	// 	Usage:   "Set ip address of already existing machine.",
+	// 	Usage:   "Deploy to already existing machine.",
 	// },
 }
 
@@ -78,7 +82,8 @@ func Deploy(c *cli.Context) (e error) {
 	project := internal.Project{
 		// Path: cwd,
 		Temp: utils.Temp(),
-		Repo: c.Args().First(),
+		Repo: c.String("url"),
+		Auth: os.Getenv("APKER_AUTH"),
 	}
 
 	// Housekeeping.
@@ -90,7 +95,7 @@ func Deploy(c *cli.Context) (e error) {
 		var bytes []byte
 
 		// Get content of apker.yaml
-		if bytes, e = utils.GitFile(project.Repo, "apker.yaml"); e != nil {
+		if bytes, e = utils.GitFile(project.Repo, "apker.yaml", project.Auth); e != nil {
 			return
 		}
 
@@ -114,6 +119,7 @@ func Deploy(c *cli.Context) (e error) {
 		return
 	}
 
+	// TODO: add step here to validate all config
 	// Image url or distro name is required
 	if project.Config.Image.From == "" {
 
@@ -121,6 +127,8 @@ func Deploy(c *cli.Context) (e error) {
 		return
 	}
 
+	// TODO: instead of this, add a func in project to Set and resolve defaults
+	// TODO: add ability to connect with password
 	// Set path of ssh keys
 	project.PublicKey.Fingerprint,
 		project.PublicKey.Path,
@@ -181,7 +189,7 @@ func digitaloceanDeploy(project *internal.Project, c *cli.Context) (e error) {
 
 	} else {
 
-		fmt.Println("Name: " + project.Name)
+		outputs.Success("Name: "+project.Name, "")
 	}
 
 	// Droplet size and region
@@ -199,23 +207,22 @@ DropletSetup:
 	// Ask for ssh key passphrase
 	if c.Bool("passphrase") {
 
-		for {
+		project.PrivateKey.Passphrase, e = inputs.Password("Private key passphrase", func(p string) error {
 
-			if project.PrivateKey.Passphrase, e = inputs.Password("Private key passphrase"); e != nil {
-				return
+			if utils.IsValidPassphrase(project.PrivateKey.Path, p) {
+				return nil
 			}
 
-			// Validate passphrase before continue
-			if utils.IsValidPassphrase(project.PrivateKey.Path, project.PrivateKey.Passphrase) {
-				break
-			}
+			return errors.New("✘ Invalid passphrase!")
+		})
 
-			fmt.Println("✘ Invalid passphrase!")
+		if e != nil {
+			return
 		}
 	}
 
 	// Install image on digitalocean.
-	sp = inputs.Spinner(" Droplet...")
+	sp = inputs.Spinner(" Droplet setup...")
 
 	// Timeout for install step for
 	installTimeout = time.After(c.Duration("timeout"))
@@ -248,7 +255,7 @@ MachineLoop:
 
 				if skipInputPrompts == false {
 
-					fmt.Println("✔ Droplet image created.")
+					outputs.Success("Droplet image created.", "")
 				}
 
 				sp = inputs.Spinner(" Cheking droplet...")
@@ -273,7 +280,7 @@ MachineLoop:
 			if int(c.Duration("timeout")) != 0 {
 
 				sp.Stop()
-				fmt.Printf("⌛ You can run: '%s --image %d' when image ready.", strings.Join(os.Args, " "), do.ImageID)
+				fmt.Printf("⌛ You can run: '%s --image %d' when image is ready.", strings.Join(os.Args, " "), do.ImageID)
 
 				if c.Bool("no-timeout-error") == false {
 
@@ -293,10 +300,10 @@ MachineLoop:
 	}
 
 	// Now we have a droplet ready for action
-	fmt.Println("✔ Droplet now ready.")
+	outputs.Success("Droplet now ready.", "")
 
 	// Wait for ssh port
-	sp.Suffix = " Waiting for ssh port to open..."
+	sp.Suffix = " Waiting for ssh port..."
 	sp.Start()
 
 	for {
@@ -317,7 +324,7 @@ MachineLoop:
 
 	if e == nil {
 
-		fmt.Println("✔ It's 👏 Deployed 👏 successfully🚀!")
+		outputs.Success("It's 👏 Deployed 👏 successfully🚀!", "")
 	}
 
 	return
@@ -335,8 +342,11 @@ func stdout(sp *sp.Spinner) internal.OutputHandler {
 
 		} else {
 
-			fmt.Println(label)
-			fmt.Println(log.String())
+			outputs.Success(label, "")
+
+			if log := log.String(); log != "" {
+				fmt.Println(log)
+			}
 		}
 
 		sp.Start()
@@ -348,8 +358,12 @@ func stderr(sp *sp.Spinner) internal.OutputHandler {
 
 	return func(label string, log *bytes.Buffer) error {
 		sp.Stop()
-		fmt.Println("✘ " + label)
-		fmt.Println(log.String())
+		outputs.Error(label, "")
+
+		if log := log.String(); log != "" {
+			fmt.Println(log)
+		}
+
 		return nil
 	}
 }
