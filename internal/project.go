@@ -26,6 +26,7 @@ type Project struct {
 	Addr       string
 	User       string
 	Repo       string
+	Auth       string
 	Name       string
 	Path       string
 	Temp       string
