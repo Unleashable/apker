@@ -24,8 +24,8 @@
 
 ## Installation
 
-[⚠ **WARNING**]: Apker under development and its core features not completed yet. <br>
-[⚠ **WARNING**]: Please do not use this in production until v1 stable, they may be breaking changes.
+[⚠ **WARNING**]: Apker under development and its core features are not completed yet. <br>
+[⚠ **WARNING**]: Please do not use this in production until v1 stable, there may be breaking changes.
 
 You can install Apker via go, or download pre-compiled versions.
 
