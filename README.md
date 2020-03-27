@@ -1,7 +1,7 @@
 
 <div align="center">
     <a href="https://github.com/unleashable/apker">
-        <img src="https://github.com/alichtman/stronghold/raw/master/demo/icon.svg" width="200">
+        <img src="https://github.com/unleashable/apker/raw/master/demo/icon.svg" width="200">
     </a>
     <h1>APKER</h1>
 </div>
@@ -19,7 +19,7 @@
     <a href="#credits-and-license">Credits & License</a>
 </p>
 
-![screenshot](https://github.com/alichtman/stronghold/raw/master//demo/demo.gif)
+![screenshot](https://github.com/unleashable/apker/raw/master/demo/demo.gif)
 
 
 ## Installation
