@@ -38,6 +38,8 @@ github.com/mattn/go-colorable v0.1.2/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVc
 github.com/mattn/go-isatty v0.0.4/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
 github.com/mattn/go-isatty v0.0.8 h1:HLtExJ+uU2HOZ+wI0Tt5DtUDrx8yhUqDcp7fYERX4CE=
 github.com/mattn/go-isatty v0.0.8/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
+github.com/melbahja/promptui v0.7.1-0.20200330222651-3563d9548264 h1:958pLs3Kq+b7D1K7+5vXjGwFX/8JLndsbLPeblXO0VY=
+github.com/melbahja/promptui v0.7.1-0.20200330222651-3563d9548264/go.mod h1:SuYqOUOtvH9GE177MPbH879Wxfk/YAR3bTBR59uICkc=
 github.com/melbahja/ssh v0.0.1 h1:2z3LXaFI2VwZz4eSPUB+jCTIoGTKhOf4P4mXM+Of1gw=
 github.com/melbahja/ssh v0.0.1/go.mod h1:916nOzP+1bV0LsP1iADvz7DB0V1LHw+CsuL70nCx5jY=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
