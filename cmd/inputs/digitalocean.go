@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/manifoldco/promptui"
+	"github.com/melbahja/promptui"
 	"github.com/unleashable/apker/internal/providers"
 )
 

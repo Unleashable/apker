@@ -2,7 +2,7 @@ package inputs
 
 import (
 	"fmt"
-	"github.com/manifoldco/promptui"
+	"github.com/melbahja/promptui"
 )
 
 func Password(label string, validator promptui.ValidateFunc) (string, error) {
@@ -13,7 +13,7 @@ func Password(label string, validator promptui.ValidateFunc) (string, error) {
 		Validate:       validator,
 		LazyValidation: true,
 		Templates: &promptui.PromptTemplates{
-			Success: fmt.Sprintf(`%s {{faint "Password has been validated:"}} `, promptui.IconGood),
+			Success: fmt.Sprintf(`%s {{faint "Password:"}} `, promptui.IconGood),
 		},
 	}
 

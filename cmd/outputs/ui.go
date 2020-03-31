@@ -2,7 +2,7 @@ package outputs
 
 import (
 	"fmt"
-	"github.com/manifoldco/promptui"
+	"github.com/melbahja/promptui"
 )
 
 func Success(msg string, icon string) {

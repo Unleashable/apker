@@ -4,7 +4,7 @@
 package inputs
 
 import (
-	"github.com/manifoldco/promptui"
+	"github.com/melbahja/promptui"
 )
 
 func AskString(label string, def string) (v string, e error) {
