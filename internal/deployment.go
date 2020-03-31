@@ -6,6 +6,7 @@ package internal
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/melbahja/ssh"
@@ -14,6 +15,8 @@ import (
 
 type OutputHandler func(description string, log *bytes.Buffer) error
 
+type InteractiveHandler func(log *bytes.Buffer) error
+
 type ExecStep struct {
 	Done    string
 	Label   string
@@ -21,10 +24,11 @@ type ExecStep struct {
 }
 
 type Deployment struct {
-	SSH           *ssh.Client
-	Project       *Project
-	StdoutHandler OutputHandler
-	StderrHandler OutputHandler
+	SSH                *ssh.Client
+	Project            *Project
+	StdoutHandler      OutputHandler
+	StderrHandler      OutputHandler
+	InteractiveHandler InteractiveHandler
 }
 
 func (d *Deployment) Run() (e error) {
@@ -35,7 +39,7 @@ func (d *Deployment) Run() (e error) {
 
 		steps = append(steps, ExecStep{
 			Done:    fmt.Sprintf("Setup: %s", command),
-			Label:   fmt.Sprintf("Running setup command: %s", command),
+			Label:   fmt.Sprintf("Running: %s", command),
 			Command: command,
 		})
 	}
@@ -48,6 +52,10 @@ func (d *Deployment) Run() (e error) {
 		Done:    "Project cloned successfully on: /tmp/apker",
 		Label:   fmt.Sprintf("Cloning project repository: %s", d.Project.Repo),
 		Command: fmt.Sprintf("git clone %s /tmp/apker/", utils.UrlAuth(d.Project.Repo, d.Project.Auth)),
+	}, ExecStep{
+		Done:    "Config file copied successfully",
+		Label:   "Coping config file",
+		Command: "mkdir -p /usr/share/apker/ && cp /tmp/apker/apker.yaml /usr/share/apker/apker.yaml",
 	})
 
 	var command string
@@ -79,7 +87,7 @@ func (d Deployment) exec(steps []ExecStep) (e error) {
 
 	for _, step := range steps {
 
-		d.StdoutHandler("", bytes.NewBufferString(step.Label))
+		d.InteractiveHandler(bytes.NewBufferString(step.Label))
 
 		cmd.Command = step.Command
 
@@ -105,8 +113,10 @@ func stepToCommand(step string) (c string, e error) {
 		break
 
 	case "copy":
-		// TODO: this part need more work
-		c = `cd /tmp/apker && mkdir -p ` + parts[2] + ` && rsync -a --delete ` + parts[1] + ` ` + parts[2]
+		// TODO: this part need more work...
+		src := strconv.Quote(parts[1])
+		dist := strconv.Quote(parts[2])
+		c = `cd /tmp/apker && mkdir -p ` + dist + ` && rsync -av --quiet ` + src + ` ` + dist
 		break
 
 	case "reboot":
