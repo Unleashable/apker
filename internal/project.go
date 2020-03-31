@@ -34,7 +34,7 @@ type Project struct {
 	PrivateKey PrivateSSHKey
 }
 
-func (project *Project) Deploy(outHandler OutputHandler, errHandler OutputHandler) error {
+func (project *Project) Deploy(outHandler OutputHandler, errHandler OutputHandler, itHandler InteractiveHandler) error {
 
 	if project.User == "" {
 		project.User = "root"
@@ -54,10 +54,11 @@ func (project *Project) Deploy(outHandler OutputHandler, errHandler OutputHandle
 	}
 
 	deployment := &Deployment{
-		SSH:           client,
-		Project:       project,
-		StdoutHandler: outHandler,
-		StderrHandler: errHandler,
+		SSH:                client,
+		Project:            project,
+		StdoutHandler:      outHandler,
+		StderrHandler:      errHandler,
+		InteractiveHandler: itHandler,
 	}
 
 	if e = deployment.Run(); e != nil {
