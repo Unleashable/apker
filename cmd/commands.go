@@ -19,7 +19,13 @@ var Commands = []*cli.Command{
 	{
 		Name:    "list",
 		Aliases: []string{"ls"},
-		Usage:   "List machines",
+		Usage:   "List machines.",
 		Action:  actions.List,
+	},
+	{
+		Name:   "run",
+		Usage:  "Run an action on remote machine.",
+		Action: actions.Run,
+		Flags:  actions.RunFlags,
 	},
 }
