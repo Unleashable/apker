@@ -41,8 +41,8 @@ var DeployFlags = []cli.Flag{
 		Usage:   "Set project git repository url.",
 	},
 	&cli.BoolFlag{
-		Name:    "passphrase",
-		Usage:   "Ask for private key passphrase for protected keys.",
+		Name:  "passphrase",
+		Usage: "Ask for private key passphrase for protected keys.",
 	},
 	&cli.DurationFlag{
 		Name:    "timeout",
@@ -318,7 +318,7 @@ MachineLoop:
 	// Deploy steps spinner!
 	sp.Suffix = " Running deploy steps..."
 
-	e = project.Deploy(stdout(sp), stderr(sp))
+	e = project.Deploy(stdout(sp), stderr(sp), spinner(sp))
 
 	sp.Stop()
 
@@ -330,23 +330,25 @@ MachineLoop:
 	return
 }
 
+func spinner(sp *sp.Spinner) internal.InteractiveHandler {
+
+	return func(log *bytes.Buffer) error {
+
+		sp.Suffix = " " + log.String()
+		return nil
+	}
+}
+
 func stdout(sp *sp.Spinner) internal.OutputHandler {
 
 	return func(label string, log *bytes.Buffer) error {
 
 		sp.Stop()
 
-		if label == "" {
+		outputs.Success(label, "")
 
-			sp.Suffix = " " + log.String()
-
-		} else {
-
-			outputs.Success(label, "")
-
-			if log := log.String(); log != "" {
-				fmt.Println(log)
-			}
+		if log := log.String(); log != "" {
+			fmt.Println(log)
 		}
 
 		sp.Start()
@@ -357,7 +359,9 @@ func stdout(sp *sp.Spinner) internal.OutputHandler {
 func stderr(sp *sp.Spinner) internal.OutputHandler {
 
 	return func(label string, log *bytes.Buffer) error {
+
 		sp.Stop()
+
 		outputs.Error(label, "")
 
 		if log := log.String(); log != "" {
