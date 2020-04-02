@@ -24,6 +24,7 @@ func init() {
 		Version:  version,
 		Flags:    cmd.Flags,
 		Commands: cmd.Commands,
+		EnableBashCompletion: true,
 		Authors: []*cli.Author{
 			&cli.Author{
 				Name:  "Mohamed Elbahja",
