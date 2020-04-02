@@ -4,10 +4,11 @@
 package internal
 
 import (
-	"fmt"
+	"bytes"
 	"time"
 
 	"github.com/melbahja/ssh"
+	"github.com/unleashable/apker/internal/utils"
 	sh "golang.org/x/crypto/ssh"
 )
 
@@ -34,7 +35,7 @@ type Project struct {
 	PrivateKey PrivateSSHKey
 }
 
-func (project *Project) Deploy(outHandler OutputHandler, errHandler OutputHandler, itHandler InteractiveHandler) error {
+func (project *Project) Deploy(allowEvents bool, outHandler OutputHandler, errHandler OutputHandler, itHandler InteractiveHandler) error {
 
 	if project.User == "" {
 		project.User = "root"
@@ -61,14 +62,21 @@ func (project *Project) Deploy(outHandler OutputHandler, errHandler OutputHandle
 		InteractiveHandler: itHandler,
 	}
 
+	var out []byte
+
 	if e = deployment.Run(); e != nil {
 
-		// TODO: exec events
-		fmt.Println(project.Config.Events.Error)
-		return e
+		if allowEvents && project.Config.Events.Error != "" {
+
+			out, _ = utils.Run("sh", []string{"-c", project.Config.Events.Error})
+			errHandler("Event: error", bytes.NewBuffer(out))
+		}
+
+	} else if allowEvents && project.Config.Events.Done != "" {
+
+		out, e = utils.Run("sh", []string{"-c", project.Config.Events.Done})
+		outHandler("Event: done", bytes.NewBuffer(out))
 	}
 
-	fmt.Println(project.Config.Events.Done)
-
-	return nil
+	return e
 }
