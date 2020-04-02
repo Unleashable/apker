@@ -8,6 +8,10 @@ build: clean
 install:
 	go install $(LDFLAGS)
 
+release: clean
+	env GOOS=linux go build $(LDFLAGS) -o bin/apker
+	env GOOS=darwin go build $(LDFLAGS) -o bin/apker-darwin
+	env GOOS=windows go build $(LDFLAGS) -o bin/apker.exe
+
 clean:
 	rm -rf bin/
-
