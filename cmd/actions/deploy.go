@@ -62,6 +62,16 @@ var DeployFlags = []cli.Flag{
 		Name:  "image",
 		Usage: "Create machine/droplet from specific image `id`.",
 	},
+	&cli.StringSliceFlag{
+		Name:    "parameter",
+		Usage:   "Set deploy template parameters.",
+		Aliases: []string{"set"},
+	},
+	&cli.BoolFlag{
+		Name:    "events",
+		Usage:   "Allow events to execute on local machine.",
+		Aliases: []string{"with-events"},
+	},
 	// &cli.StringFlag{
 	// 	Name:    "addr",
 	// 	Aliases: []string{"ip"},
@@ -72,15 +82,15 @@ var DeployFlags = []cli.Flag{
 func Deploy(c *cli.Context) (e error) {
 
 	// Where are we?
-	// cwd, e := os.Getwd()
+	cwd, e := os.Getwd()
 
-	// if e != nil {
-	// 	return
-	// }
+	if e != nil {
+		return
+	}
 
 	// Init new project with the current working directory
 	project := internal.Project{
-		// Path: cwd,
+		Path: cwd,
 		Temp: utils.Temp(),
 		Repo: c.String("url"),
 		Auth: os.Getenv("APKER_AUTH"),
@@ -89,18 +99,20 @@ func Deploy(c *cli.Context) (e error) {
 	// Housekeeping.
 	defer os.RemoveAll(project.Temp)
 
+	var tmp []byte
+
+RemoteGetYamlFile:
+
 	// Work from remote repo
 	if project.Repo != "" {
 
-		var bytes []byte
-
 		// Get content of apker.yaml
-		if bytes, e = utils.GitFile(project.Repo, "apker.yaml", project.Auth); e != nil {
+		if tmp, e = utils.GitFile(project.Repo, "apker.yaml", project.Auth); e != nil {
 			return
 		}
 
 		// Saving apker.yaml
-		if e = ioutil.WriteFile(project.Temp+"/apker.yaml", bytes, 0644); e != nil {
+		if e = ioutil.WriteFile(project.Temp+"/apker.yaml", tmp, 0644); e != nil {
 			return
 		}
 
@@ -109,9 +121,14 @@ func Deploy(c *cli.Context) (e error) {
 
 	} else {
 
-		// TODO: work from cwd if it is a valid git repo
-		e = errors.New("Remote git repo required")
-		return
+		if tmp, e = utils.Run("git", []string{"config", "--get", "remote.origin.url"}); e != nil {
+
+			e = errors.New("Get remote repository url error: " + e.Error())
+			return
+		}
+
+		project.Repo = strings.TrimSpace(string(tmp))
+		goto RemoteGetYamlFile
 	}
 
 	// Load project config from apker.yaml
@@ -318,7 +335,7 @@ MachineLoop:
 	// Deploy steps spinner!
 	sp.Suffix = " Running deploy steps..."
 
-	e = project.Deploy(stdout(sp), stderr(sp), spinner(sp))
+	e = project.Deploy(c.Bool("events"), stdout(sp), stderr(sp), spinner(sp))
 
 	sp.Stop()
 
