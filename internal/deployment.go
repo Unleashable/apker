@@ -4,18 +4,17 @@
 package internal
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/melbahja/ssh"
+	"github.com/melbahja/goph"
 	"github.com/unleashable/apker/internal/utils"
 )
 
-type OutputHandler func(description string, log *bytes.Buffer) error
+type OutputHandler func(description string, log []byte) error
 
-type InteractiveHandler func(log *bytes.Buffer) error
+type InteractiveHandler func(log string) error
 
 type ExecStep struct {
 	Done    string
@@ -24,7 +23,7 @@ type ExecStep struct {
 }
 
 type Deployment struct {
-	SSH                *ssh.Client
+	SSH                *goph.Client
 	Project            *Project
 	StdoutHandler      OutputHandler
 	StderrHandler      OutputHandler
@@ -33,9 +32,12 @@ type Deployment struct {
 
 func (d *Deployment) Run() (e error) {
 
-	steps := []ExecStep{}
+	var (
+		command string
+		steps   []ExecStep = []ExecStep{}
+	)
 
-	for _, command := range d.Project.Config.Setup {
+	for _, command = range d.Project.Config.Setup {
 
 		steps = append(steps, ExecStep{
 			Done:    fmt.Sprintf("Setup: %s", command),
@@ -45,7 +47,7 @@ func (d *Deployment) Run() (e error) {
 	}
 
 	steps = append(steps, ExecStep{
-		Done:    "Requirements: git and rsync installed!",
+		Done:    "Requirements: git and rsync installed.",
 		Label:   "Verifying requirements...",
 		Command: "which git rsync && git --version && rsync --version",
 	}, ExecStep{
@@ -53,12 +55,10 @@ func (d *Deployment) Run() (e error) {
 		Label:   fmt.Sprintf("Cloning project repository: %s", d.Project.Repo),
 		Command: fmt.Sprintf("git clone %s /tmp/apker/", utils.UrlAuth(d.Project.Repo, d.Project.Auth)),
 	}, ExecStep{
-		Done:    "Config file copied successfully",
+		Done:    "Config file copied successfully.",
 		Label:   "Coping config file",
 		Command: "mkdir -p /usr/share/apker/ && cp /tmp/apker/apker.yaml /usr/share/apker/apker.yaml",
 	})
-
-	var command string
 
 	for _, step := range d.Project.Config.Deploy.Steps {
 
@@ -78,26 +78,19 @@ func (d *Deployment) Run() (e error) {
 
 func (d Deployment) exec(steps []ExecStep) (e error) {
 
-	var (
-		result ssh.Result
-		cmd    = ssh.Command{
-			Client: d.SSH,
-		}
-	)
+	var result []byte
 
 	for _, step := range steps {
 
-		d.InteractiveHandler(bytes.NewBufferString(step.Label))
+		d.InteractiveHandler(step.Label)
 
-		cmd.Command = step.Command
+		if result, e = d.SSH.Run(step.Command); e != nil {
 
-		if result, e = cmd.Run(); e != nil {
-
-			d.StderrHandler(step.Command, &result.Stderr)
+			d.StderrHandler(step.Command, result)
 			return
 		}
 
-		d.StdoutHandler(step.Done, &result.Stdout)
+		d.StdoutHandler(step.Done, result)
 	}
 
 	return
@@ -109,14 +102,15 @@ func stepToCommand(step string) (c string, e error) {
 
 	switch parts[0] {
 	case "run":
-		c = strings.Join(parts[1:], " ")
+		c = fmt.Sprintf("cd /tmp/apker && %s", strings.Join(parts[1:], " "))
 		break
 
 	case "copy":
-		// TODO: this part need more work...
-		src := strconv.Quote(parts[1])
-		dist := strconv.Quote(parts[2])
-		c = `cd /tmp/apker && mkdir -p ` + dist + ` && rsync -av --quiet ` + src + ` ` + dist
+		c = fmt.Sprintf("cd /tmp/apker && rsync -av --quiet %s %s", strconv.Quote(parts[1]), strconv.Quote(parts[2]))
+		break
+
+	case "mkdir":
+		c = fmt.Sprintf("mkdir -p %s", strings.Join(parts[1:], " "))
 		break
 
 	case "reboot":
@@ -124,5 +118,6 @@ func stepToCommand(step string) (c string, e error) {
 		break
 	}
 
+	e = fmt.Errorf("Unknown step: %s", step)
 	return
 }
