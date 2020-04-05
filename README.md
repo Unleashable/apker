@@ -92,8 +92,8 @@ PRs, issues, and feedback from ninja gophers are very welcomed.
 ## Credits and License
 
 #### Credits:
-Models Used: [go.mod](https://github.com/Unleashable/apker/blob/master/go.mod) <br>
-Icon By: <a href="https://thenounproject.com/smodgekar/">Sachin Modgekar</a>
+Modules: [go.mod](https://github.com/Unleashable/apker/blob/master/go.mod) <br>
+Icon: <a href="https://github.com/ashleymcnamara/gophers">ashleymcnamara/gophers</a>
 
 
 #### License:
