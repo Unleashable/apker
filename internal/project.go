@@ -4,12 +4,8 @@
 package internal
 
 import (
-	"bytes"
-	"time"
-
-	"github.com/melbahja/ssh"
+	"github.com/melbahja/goph"
 	"github.com/unleashable/apker/internal/utils"
-	sh "golang.org/x/crypto/ssh"
 )
 
 type PublicSSHKey struct {
@@ -41,14 +37,7 @@ func (project *Project) Deploy(allowEvents bool, outHandler OutputHandler, errHa
 		project.User = "root"
 	}
 
-	client, e := ssh.New(ssh.Config{
-		User: project.User,
-		Addr: project.Addr,
-		Config: &sh.ClientConfig{
-			Timeout: 20 * time.Second,
-		},
-		Auth: ssh.Key(project.PrivateKey.Path, project.PrivateKey.Passphrase),
-	})
+	client, e := goph.NewUnknown(project.User, project.Addr, goph.Key(project.PrivateKey.Path, project.PrivateKey.Passphrase))
 
 	if e != nil {
 		return e
@@ -68,14 +57,16 @@ func (project *Project) Deploy(allowEvents bool, outHandler OutputHandler, errHa
 
 		if allowEvents && project.Config.Events.Error != "" {
 
+			// Run error event
 			out, _ = utils.Run("sh", []string{"-c", project.Config.Events.Error})
-			errHandler("Event: error", bytes.NewBuffer(out))
+			errHandler("Event: error", out)
 		}
 
 	} else if allowEvents && project.Config.Events.Done != "" {
 
+		// Run done event
 		out, e = utils.Run("sh", []string{"-c", project.Config.Events.Done})
-		outHandler("Event: done", bytes.NewBuffer(out))
+		outHandler("Event: done", out)
 	}
 
 	return e
