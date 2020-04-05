@@ -19,11 +19,11 @@ var (
 func init() {
 
 	app = &cli.App{
-		Name:     "apker",
-		Usage:    "deploy custom images in seconds.",
-		Version:  version,
-		Flags:    cmd.Flags,
-		Commands: cmd.Commands,
+		Name:                 "apker",
+		Usage:                "deploy custom images in seconds.",
+		Version:              version,
+		Flags:                cmd.Flags,
+		Commands:             cmd.Commands,
 		EnableBashCompletion: true,
 		Authors: []*cli.Author{
 			&cli.Author{
