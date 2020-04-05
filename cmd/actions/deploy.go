@@ -4,7 +4,6 @@
 package actions
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -349,22 +348,22 @@ MachineLoop:
 
 func spinner(sp *sp.Spinner) internal.InteractiveHandler {
 
-	return func(log *bytes.Buffer) error {
+	return func(log string) error {
 
-		sp.Suffix = " " + log.String()
+		sp.Suffix = " " + log
 		return nil
 	}
 }
 
 func stdout(sp *sp.Spinner) internal.OutputHandler {
 
-	return func(label string, log *bytes.Buffer) error {
+	return func(label string, log []byte) error {
 
 		sp.Stop()
 
 		outputs.Success(label, "")
 
-		if log := log.String(); log != "" {
+		if log := string(log); log != "" {
 			fmt.Println(log)
 		}
 
@@ -375,13 +374,13 @@ func stdout(sp *sp.Spinner) internal.OutputHandler {
 
 func stderr(sp *sp.Spinner) internal.OutputHandler {
 
-	return func(label string, log *bytes.Buffer) error {
+	return func(label string, log []byte) error {
 
 		sp.Stop()
 
 		outputs.Error(label, "")
 
-		if log := log.String(); log != "" {
+		if log := string(log); log != "" {
 			fmt.Println(log)
 		}
 
