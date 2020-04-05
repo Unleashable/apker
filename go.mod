@@ -7,8 +7,8 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/digitalocean/godo v1.32.0
 	github.com/manifoldco/promptui v0.7.0 // indirect
+	github.com/melbahja/goph v0.1.0
 	github.com/melbahja/promptui v0.7.1-0.20200330222651-3563d9548264
-	github.com/melbahja/ssh v0.0.1
 	github.com/rs/xid v1.2.1
 	github.com/urfave/cli/v2 v2.2.0
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
