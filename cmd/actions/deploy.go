@@ -71,11 +71,6 @@ var DeployFlags = []cli.Flag{
 		Usage:   "Allow events to execute on local machine.",
 		Aliases: []string{"with-events"},
 	},
-	// &cli.StringFlag{
-	// 	Name:    "addr",
-	// 	Aliases: []string{"ip"},
-	// 	Usage:   "Deploy to already existing machine.",
-	// },
 }
 
 func Deploy(c *cli.Context) (e error) {
@@ -92,6 +87,8 @@ func Deploy(c *cli.Context) (e error) {
 		Path: cwd,
 		Temp: utils.Temp(),
 		Repo: c.String("url"),
+		Name: c.String("name"),
+		User: c.String("user"),
 		Auth: os.Getenv("APKER_AUTH"),
 	}
 
@@ -110,13 +107,13 @@ RemoteGetYamlFile:
 			return
 		}
 
-		// Saving apker.yaml
+		// Save apker.yaml to temp file
 		if e = ioutil.WriteFile(project.Temp+"/apker.yaml", tmp, 0644); e != nil {
 			return
 		}
 
 		// Change project path to temp
-		project.Path = project.Temp
+		// project.Path = project.Temp
 
 	} else {
 
@@ -131,15 +128,12 @@ RemoteGetYamlFile:
 	}
 
 	// Load project config from apker.yaml
-	if project.Config, e = internal.LoadConfig(project.Path); e != nil {
+	if project.Config, e = internal.LoadConfig(project.Temp, c.StringSlice("parameter")); e != nil {
 		return
 	}
 
-	// TODO: add step here to validate all config
-	// Image url or distro name is required
-	if project.Config.Image.From == "" {
-
-		e = errors.New("Image name or url is required.")
+	// Validate config.
+	if e = project.Config.Validate(); e != nil {
 		return
 	}
 
@@ -154,11 +148,6 @@ RemoteGetYamlFile:
 	if e != nil {
 		return
 	}
-
-	// Project name
-	project.Name = c.String("name")
-	// SSH user
-	project.User = c.String("user")
 
 	if project.Name == "" && project.Config.Name != "" {
 		project.Name = "apker-image-" + project.Config.Name
@@ -245,6 +234,7 @@ DropletSetup:
 
 	// Installation channel
 	MachineChan = make(chan internal.MachineStatus)
+	defer close(MachineChan)
 
 	// Go setup Image and droplet
 	go do.SetupMachine(MachineChan, internal.Attributes{
@@ -309,7 +299,6 @@ MachineLoop:
 	}
 
 	sp.Stop()
-	close(MachineChan)
 
 	if e != nil {
 		return
