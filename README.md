@@ -1,4 +1,3 @@
-
 <div align="center">
     <a href="https://github.com/unleashable/apker">
         <img src="https://github.com/unleashable/apker/raw/master/.github/images/icon.png" width="200">
@@ -24,8 +23,7 @@
 
 ## Installation
 
-[⚠ **WARNING**]: Apker under development and its core features are not completed yet. <br>
-[⚠ **WARNING**]: Please do not use this in production until v1 stable, there may be breaking changes.
+[**⚠ WARNING**]: Apker under development and its core features are not completed yet, please do not use this in production until v1 stable, there may be BREAKING CHANGES.
 
 You can install Apker via go, or download pre-compiled versions.
 
@@ -40,7 +38,7 @@ sudo mv ./apker /usr/bin/apker
 sudo chmod +x /usr/bin/apker
 ```
 
-### Via Go Mod:
+### Via Go:
 
 
 ```bash
@@ -98,4 +96,4 @@ Icon: <a href="https://github.com/ashleymcnamara/gophers">ashleymcnamara/gophers
 
 #### License:
 
-Apker is provided under the [MIT License](https://github.com/Unleashable/apker/blob/master/LICENSE)
+Apker is provided under the [MIT License](https://github.com/Unleashable/apker/blob/master/LICENSE).
