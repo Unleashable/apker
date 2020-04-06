@@ -37,7 +37,7 @@ func (d *Deployment) Run() (e error) {
 		steps   []ExecStep = []ExecStep{}
 	)
 
-	for _, command = range d.Project.Config.Setup {
+	for _, command = range d.Project.Config.Deploy.Setup {
 
 		steps = append(steps, ExecStep{
 			Done:    fmt.Sprintf("Setup: %s", command),
@@ -55,9 +55,13 @@ func (d *Deployment) Run() (e error) {
 		Label:   fmt.Sprintf("Cloning project repository: %s", d.Project.Repo),
 		Command: fmt.Sprintf("git clone %s /tmp/apker/", utils.UrlAuth(d.Project.Repo, d.Project.Auth)),
 	}, ExecStep{
+		Done:    "Apker directory created successfully.",
+		Label:   "Creating apker directory.",
+		Command: "mkdir -p /usr/share/apker/bin/",
+	}, ExecStep{
 		Done:    "Config file copied successfully.",
 		Label:   "Coping config file",
-		Command: "mkdir -p /usr/share/apker/ && cp /tmp/apker/apker.yaml /usr/share/apker/apker.yaml",
+		Command: "cp /tmp/apker/apker.yaml /usr/share/apker/apker.yaml",
 	})
 
 	for _, step := range d.Project.Config.Deploy.Steps {
@@ -78,15 +82,18 @@ func (d *Deployment) Run() (e error) {
 
 func (d Deployment) exec(steps []ExecStep) (e error) {
 
-	var result []byte
+	var (
+		env    string = envToString(d.Project.Config.Deploy.Env)
+		result []byte
+	)
 
 	for _, step := range steps {
 
 		d.InteractiveHandler(step.Label)
 
-		if result, e = d.SSH.Run(step.Command); e != nil {
+		if result, e = d.SSH.Run(fmt.Sprintf("env %s bash -c '%s'", env, step.Command)); e != nil {
 
-			d.StderrHandler(step.Command, result)
+			d.StderrHandler(fmt.Sprintf("Label: %s\nEnv: %s\nCommand: %s", step.Label, env, step.Command), result)
 			return
 		}
 
@@ -94,6 +101,17 @@ func (d Deployment) exec(steps []ExecStep) (e error) {
 	}
 
 	return
+}
+
+func envToString(vars map[string]string) string {
+
+	env := []string{}
+
+	for i := range vars {
+		env = append(env, fmt.Sprintf("%s=%s", i, strconv.Quote(vars[i])))
+	}
+
+	return strings.Join(env, " ")
 }
 
 func stepToCommand(step string) (c string, e error) {
@@ -113,11 +131,17 @@ func stepToCommand(step string) (c string, e error) {
 		c = fmt.Sprintf("mkdir -p %s", strings.Join(parts[1:], " "))
 		break
 
+	case "action":
+		// c = fmt.Sprintf("cp /tmp/apker/%s /usr/share/apker/bin/%s && chmod +x /usr/share/apker/bin/%s", parts[0], parts[1], parts[1])
+		break
+
 	case "reboot":
 		c = "reboot &"
 		break
+
+	default:
+		e = fmt.Errorf("Unknown step: %s", step)
 	}
 
-	e = fmt.Errorf("Unknown step: %s", step)
 	return
 }
