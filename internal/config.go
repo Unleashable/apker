@@ -25,15 +25,25 @@ type Config struct {
 		Name        string            `yaml:"name"`
 		Credentials map[string]string `yaml:"credentials"`
 	} `yaml:"provider"`
-	Setup  []string `yaml:"setup"`
 	Deploy struct {
-		Steps []string `yaml:"steps"`
+		Env   map[string]string `yaml:env`
+		Setup []string          `yaml:"setup"`
+		Steps []string          `yaml:"steps"`
 	} `yaml:"deploy"`
 	Actions map[string]string `yaml:"actions"`
 	Events  struct {
-		Error string `yaml:"error"`
-		Done  string `yaml:"done"`
+		Failure string `yaml:"failure"`
+		Success string `yaml:"success"`
 	} `yaml:"events"`
+}
+
+func (c Config) Validate() error {
+
+	if c.Image.From == "" {
+		return fmt.Errorf("Image name or url is required.")
+	}
+
+	return checkSteps(c.Deploy.Steps)
 }
 
 func isRequired(k string) bool {
@@ -46,11 +56,56 @@ func isRequired(k string) bool {
 	return false
 }
 
-func parseTpl(file string, name string) (c string, e error) {
+func parseParams(params []string) map[string]string {
 
+	paramsMap := make(map[string]string)
+	paramSlice := []string{}
+
+	for _, val := range params {
+
+		if paramSlice = strings.Split(val, "="); len(paramSlice) == 2 {
+			paramsMap[paramSlice[0]] = paramSlice[1]
+			continue
+		}
+
+		panic(fmt.Sprintf("Invalid param %s", val))
+	}
+
+	return paramsMap
+}
+
+func parseTpl(file string, name string, params []string) (c string, e error) {
+
+	paramsMap := parseParams(params)
 	tpl, e := template.New(name).Funcs(template.FuncMap{
 		"Env": func(key string) string {
 			return utils.Env(key, isRequired(key))
+		},
+		"Get": func(key string) string {
+
+			if val, ok := paramsMap[key]; ok {
+				return val
+			}
+
+			panic(fmt.Sprintf("Param: %s is required, add --set %s=YOUR_VALUE", key, key))
+		},
+		"GetOr": func(key string, def string) string {
+
+			if val, ok := paramsMap[key]; ok {
+				return val
+			}
+
+			return def
+		},
+		"Run": func(cmd string) string {
+
+			val, e := utils.Run("bash", []string{"-c", cmd})
+
+			if e != nil {
+				panic(e)
+			}
+
+			return string(val)
 		},
 	}).ParseFiles(file)
 
@@ -70,6 +125,7 @@ func parseTpl(file string, name string) (c string, e error) {
 	return
 }
 
+// TODO: check steps len
 func checkSteps(steps []string) error {
 
 	var step []string
@@ -82,7 +138,7 @@ loop:
 
 		switch step[0] {
 
-		case "run", "copy":
+		case "run", "copy", "action", "mkdir":
 			continue loop
 
 		case "reboot":
@@ -97,19 +153,14 @@ loop:
 	return nil
 }
 
-func LoadConfig(projectDirectory string) (c Config, e error) {
+func LoadConfig(projectDirectory string, params []string) (c Config, e error) {
 
 	var data string
 
-	if data, e = parseTpl(projectDirectory+"/apker.yaml", "apker.yaml"); e != nil {
-
-		return
-
-	} else if e = yaml.Unmarshal([]byte(data), &c); e != nil {
-
+	if data, e = parseTpl(projectDirectory+"/apker.yaml", "apker.yaml", params); e != nil {
 		return
 	}
 
-	e = checkSteps(c.Deploy.Steps)
+	e = yaml.Unmarshal([]byte(data), &c)
 	return
 }
