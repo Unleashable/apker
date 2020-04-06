@@ -55,17 +55,17 @@ func (project *Project) Deploy(allowEvents bool, outHandler OutputHandler, errHa
 
 	if e = deployment.Run(); e != nil {
 
-		if allowEvents && project.Config.Events.Error != "" {
+		if allowEvents && project.Config.Events.Failure != "" {
 
 			// Run error event
-			out, _ = utils.Run("sh", []string{"-c", project.Config.Events.Error})
+			out, _ = utils.Run("sh", []string{"-c", project.Config.Events.Failure})
 			errHandler("Event: error", out)
 		}
 
-	} else if allowEvents && project.Config.Events.Done != "" {
+	} else if allowEvents && project.Config.Events.Success != "" {
 
 		// Run done event
-		out, e = utils.Run("sh", []string{"-c", project.Config.Events.Done})
+		out, e = utils.Run("sh", []string{"-c", project.Config.Events.Success})
 		outHandler("Event: done", out)
 	}
 
