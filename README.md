@@ -23,19 +23,14 @@
 
 ## Installation
 
-[**⚠ WARNING**]: Apker under development and its core features are not completed yet, please do not use this in production until v1 stable, there may be BREAKING CHANGES.
+[**⚠ WARNING**]: Apker is under development and its core features are not completed yet, please do not use this in production until v1 stable, there may be BREAKING CHANGES.
 
 You can install Apker via go, or download pre-compiled versions.
 
 #### Compiled:
 
-Download latest version from [Releases](https://github.com/Unleashable/apker/releases).
-
-Then move the binary file to your bin directory:
-
 ```bash
-sudo mv ./apker /usr/bin/apker
-sudo chmod +x /usr/bin/apker
+curl -sfL https://git.io/apker | sh
 ```
 
 ### Via Go:
