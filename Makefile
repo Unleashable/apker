@@ -9,9 +9,10 @@ install:
 	go install $(LDFLAGS)
 
 release: clean
-	env GOOS=linux go build $(LDFLAGS) -o bin/apker
-	env GOOS=darwin go build $(LDFLAGS) -o bin/apker-darwin
-	env GOOS=windows go build $(LDFLAGS) -o bin/apker.exe
+	goreleaser release --rm-dist
+
+installer:
+	godownloader --repo=unleashable/apker > ./install.sh
 
 clean:
 	rm -rf bin/
