@@ -92,6 +92,11 @@ func Deploy(c *cli.Context) (e error) {
 		Auth: os.Getenv("APKER_AUTH"),
 	}
 
+	// Project name fallback
+	if project.Name == "" && project.Config.Name != "" {
+		project.Name = "apker-image-" + project.Config.Name
+	}
+
 	// Housekeeping.
 	defer os.RemoveAll(project.Temp)
 
@@ -117,6 +122,7 @@ RemoteGetYamlFile:
 
 	} else {
 
+		// Get remote url
 		if tmp, e = utils.Run("git", []string{"config", "--get", "remote.origin.url"}); e != nil {
 
 			e = errors.New("Get remote repository url error: " + e.Error())
@@ -138,6 +144,7 @@ RemoteGetYamlFile:
 	}
 
 	// TODO: instead of this, add a func in project to Set and resolve defaults
+	// TODO: use auth method here.
 	// TODO: add ability to connect with password
 	// Set path of ssh keys
 	project.PublicKey.Fingerprint,
@@ -149,13 +156,12 @@ RemoteGetYamlFile:
 		return
 	}
 
-	if project.Name == "" && project.Config.Name != "" {
-		project.Name = "apker-image-" + project.Config.Name
-	}
-
 	switch project.Config.Provider.Name {
 	case "digitalocean":
 		e = digitaloceanDeploy(&project, c)
+		break
+	case "custom":
+		// e = customDeploy(&project, c)
 		break
 	default:
 		e = errors.New("Unknown provider name: " + project.Config.Provider.Name)
