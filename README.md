@@ -8,7 +8,7 @@
 <h4 align="center">
     Deploy and manage your custom images to your cloud provider in seconds.
 </h4>
-
+<hr />
 <p align="center">
     <a href="#installation">Installation</a> ❘
     <a href="#usage">Usage</a> ❘
@@ -17,6 +17,7 @@
     <a href="#contributing">Contributing</a> ❘
     <a href="#credits-and-license">Credits & License</a>
 </p>
+<hr />
 
 ![screenshot](https://github.com/unleashable/apker/raw/master/.github/images/demo.gif)
 
