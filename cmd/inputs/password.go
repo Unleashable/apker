@@ -2,20 +2,36 @@ package inputs
 
 import (
 	"fmt"
-	"github.com/melbahja/promptui"
+	"github.com/unleashable/apker/cmd/outputs"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
-func Password(label string, validator promptui.ValidateFunc) (string, error) {
+func Password(label string, validator func(string) error) (string, error) {
 
-	prompt := promptui.Prompt{
-		Label:          label,
-		Mask:           '*',
-		Validate:       validator,
-		LazyValidation: true,
-		Templates: &promptui.PromptTemplates{
-			Success: fmt.Sprintf(`%s {{faint "Password:"}} `, promptui.IconGood),
-		},
+	var (
+		err   error
+		bpass []byte
+		spass string
+	)
+
+	for {
+
+		outputs.Input(label, "")
+
+		if bpass, err = terminal.ReadPassword(0); err != nil {
+			return "", err
+		}
+
+		spass = string(bpass)
+
+		if err = validator(spass); err == nil {
+			break
+		}
+
+		fmt.Println("")
+		outputs.Error(err.Error(), "")
+		err = nil
 	}
 
-	return prompt.Run()
+	return spass, nil
 }
