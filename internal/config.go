@@ -49,7 +49,7 @@ func (c Config) Validate() error {
 func isRequired(k string) bool {
 
 	switch k {
-	case "APKER_PROVIDER", "APKER_KEY":
+	case "APKER_PROVIDER":
 		return true
 	}
 
@@ -153,7 +153,7 @@ loop:
 	return nil
 }
 
-func LoadConfig(projectDirectory string, params []string) (c Config, e error) {
+func LoadConfig(projectDirectory string, params []string) (c *Config, e error) {
 
 	var data string
 
