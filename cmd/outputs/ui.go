@@ -14,6 +14,15 @@ func Success(msg string, icon string) {
 	fmt.Println(Render(icon, msg, true))
 }
 
+func Input(msg string, icon string) {
+
+	if icon == "" {
+		icon = "🔑"
+	}
+
+	fmt.Printf("%s: ", Render(icon, msg, true))
+}
+
 func Error(msg string, icon string) {
 
 	if icon == "" {
