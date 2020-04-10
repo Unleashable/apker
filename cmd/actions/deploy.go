@@ -12,6 +12,7 @@ import (
 	"time"
 
 	sp "github.com/briandowns/spinner"
+	"github.com/melbahja/goph"
 	"github.com/unleashable/apker/cmd/inputs"
 	"github.com/unleashable/apker/cmd/outputs"
 	"github.com/unleashable/apker/internal"
@@ -43,6 +44,10 @@ var DeployFlags = []cli.Flag{
 		Name:  "passphrase",
 		Usage: "Ask for private key passphrase for protected keys.",
 	},
+	&cli.BoolFlag{
+		Name:  "password",
+		Usage: "Ask for ssh password instead of using private keys.",
+	},
 	&cli.DurationFlag{
 		Name:    "timeout",
 		Aliases: []string{"t"},
@@ -71,6 +76,11 @@ var DeployFlags = []cli.Flag{
 		Usage:   "Allow events to execute on local machine.",
 		Aliases: []string{"with-events"},
 	},
+	&cli.StringFlag{
+		Name:    "addr",
+		Aliases: []string{"ip"},
+		Usage:   "Deploy on already exists machine ip address (provider custom only).",
+	},
 }
 
 func Deploy(c *cli.Context) (e error) {
@@ -90,11 +100,6 @@ func Deploy(c *cli.Context) (e error) {
 		Name: c.String("name"),
 		User: c.String("user"),
 		Auth: os.Getenv("APKER_AUTH"),
-	}
-
-	// Project name fallback
-	if project.Name == "" && project.Config.Name != "" {
-		project.Name = "apker-image-" + project.Config.Name
 	}
 
 	// Housekeeping.
@@ -138,21 +143,23 @@ RemoteGetYamlFile:
 		return
 	}
 
+	// Project name fallback
+	if project.Name == "" && project.Config.Name != "" {
+		project.Name = "apker-image-" + project.Config.Name
+	}
+
+	if project.Config.Provider.Name != "custom" && c.String("addr") != "" {
+		e = errors.New("deployment to a ip address allowed only on custom provdier.")
+		return
+	}
+
 	// Validate config.
 	if e = project.Config.Validate(); e != nil {
 		return
 	}
 
-	// TODO: instead of this, add a func in project to Set and resolve defaults
-	// TODO: use auth method here.
-	// TODO: add ability to connect with password
-	// Set path of ssh keys
-	project.PublicKey.Fingerprint,
-		project.PublicKey.Path,
-		project.PrivateKey.Path,
-		e = utils.ResolveSSHKeys(c.String("pub"), c.String("key"))
-
-	if e != nil {
+	// Set auth method.
+	if e = setAuthMethod(&project, c); e != nil {
 		return
 	}
 
@@ -161,7 +168,7 @@ RemoteGetYamlFile:
 		e = digitaloceanDeploy(&project, c)
 		break
 	case "custom":
-		// e = customDeploy(&project, c)
+		e = customDeploy(&project, c)
 		break
 	default:
 		e = errors.New("Unknown provider name: " + project.Config.Provider.Name)
@@ -215,25 +222,8 @@ func digitaloceanDeploy(project *internal.Project, c *cli.Context) (e error) {
 
 DropletSetup:
 
-	// Ask for ssh key passphrase
-	if c.Bool("passphrase") {
-
-		project.PrivateKey.Passphrase, e = inputs.Password("Private key passphrase", func(p string) error {
-
-			if utils.IsValidPassphrase(project.PrivateKey.Path, p) {
-				return nil
-			}
-
-			return errors.New("✘ Invalid passphrase!")
-		})
-
-		if e != nil {
-			return
-		}
-	}
-
 	// Install image on digitalocean.
-	sp = inputs.Spinner(" Droplet setup...")
+	sp = outputs.Spinner(" Droplet setup...")
 
 	// Timeout for install step for
 	installTimeout = time.After(c.Duration("timeout"))
@@ -270,12 +260,11 @@ MachineLoop:
 					outputs.Success("Droplet image created.", "")
 				}
 
-				sp = inputs.Spinner(" Cheking droplet...")
+				sp = outputs.Spinner(" Cheking droplet...")
 				break
 
 			case machine.IsMachineReady:
 
-				// machineIpAddr = machine.Addr
 				break MachineLoop
 
 			default:
@@ -326,10 +315,30 @@ MachineLoop:
 		}
 	}
 
+	// Run deployment
+	e = runDeploy(project, sp, c.Bool("events"))
+	return
+}
+
+func customDeploy(project *internal.Project, c *cli.Context) (e error) {
+
+	sp := outputs.Spinner("Start...")
+
+	if project.Addr = c.String("addr"); project.Addr == "" {
+
+		sp.Stop()
+		return errors.New("Please set machine ip address via 'addr' flag.")
+	}
+
+	return runDeploy(project, sp, c.Bool("events"))
+}
+
+func runDeploy(project *internal.Project, sp *sp.Spinner, events bool) (e error) {
+
 	// Deploy steps spinner!
 	sp.Suffix = " Running deploy steps..."
 
-	e = project.Deploy(c.Bool("events"), stdout(sp), stderr(sp), spinner(sp))
+	e = project.Deploy(events, stdout(sp), stderr(sp), spinner(sp))
 
 	sp.Stop()
 
@@ -338,6 +347,61 @@ MachineLoop:
 		outputs.Success("It's 👏 Deployed 👏 successfully🚀!", "")
 	}
 
+	return
+}
+
+func setAuthMethod(project *internal.Project, c *cli.Context) (e error) {
+
+	var pass string
+
+	if c.Bool("password") {
+
+		pass, e = inputs.Password("Enter ssh password", func(p string) error {
+
+			if len(p) < 1 {
+				return errors.New("Invalid password!")
+			}
+
+			return nil
+		})
+
+		if e != nil {
+			return
+		}
+
+		fmt.Println("")
+		project.SSHAuth = goph.Password(pass)
+		return
+	}
+
+	project.PublicKey.Fingerprint,
+		project.PublicKey.Path,
+		project.PrivateKey.Path,
+		e = utils.ResolveSSHKeys(c.String("pub"), c.String("key"))
+
+	if e != nil {
+		return
+	}
+
+	if c.Bool("passphrase") {
+
+		pass, e = inputs.Password("Enter private key passphrase", func(p string) error {
+
+			if utils.IsValidPassphrase(project.PrivateKey.Path, p) {
+				return nil
+			}
+
+			return errors.New("Invalid passphrase!")
+		})
+
+		if e != nil {
+			return
+		}
+
+		fmt.Println("")
+	}
+
+	project.SSHAuth = goph.Key(project.PrivateKey.Path, pass)
 	return
 }
 
@@ -358,9 +422,10 @@ func stdout(sp *sp.Spinner) internal.OutputHandler {
 
 		outputs.Success(label, "")
 
-		if log := string(log); log != "" {
-			fmt.Println(log)
-		}
+		// TODO: redirect stdout to a file by a flag. default /dev/null
+		// if log := string(log); log != "" {
+		// 	fmt.Println(log)
+		// }
 
 		sp.Start()
 		return nil
