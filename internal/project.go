@@ -14,12 +14,11 @@ type PublicSSHKey struct {
 }
 
 type PrivateSSHKey struct {
-	Passphrase string
-	Path       string
+	Path string
 }
 
 type Project struct {
-	Config
+	*Config
 	Addr       string
 	User       string
 	Repo       string
@@ -27,6 +26,7 @@ type Project struct {
 	Name       string
 	Path       string
 	Temp       string
+	SSHAuth    goph.Auth
 	PublicKey  PublicSSHKey
 	PrivateKey PrivateSSHKey
 }
@@ -37,7 +37,7 @@ func (project *Project) Deploy(allowEvents bool, outHandler OutputHandler, errHa
 		project.User = "root"
 	}
 
-	client, e := goph.NewUnknown(project.User, project.Addr, goph.Key(project.PrivateKey.Path, project.PrivateKey.Passphrase))
+	client, e := goph.NewUnknown(project.User, project.Addr, project.SSHAuth)
 
 	if e != nil {
 		return e
@@ -57,16 +57,16 @@ func (project *Project) Deploy(allowEvents bool, outHandler OutputHandler, errHa
 
 		if allowEvents && project.Config.Events.Failure != "" {
 
-			// Run error event
+			// Run failure event
 			out, _ = utils.Run("sh", []string{"-c", project.Config.Events.Failure})
-			errHandler("Event: error", out)
+			errHandler("Event: failure", out)
 		}
 
 	} else if allowEvents && project.Config.Events.Success != "" {
 
-		// Run done event
+		// Run success event
 		out, e = utils.Run("sh", []string{"-c", project.Config.Events.Success})
-		outHandler("Event: done", out)
+		outHandler("Event: success", out)
 	}
 
 	return e
