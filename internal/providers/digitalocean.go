@@ -188,7 +188,7 @@ func (do *Digitalocean) CreateDroplet(image godo.DropletCreateImage) (*godo.Drop
 		Tags:   []string{"apker", "api"},
 	}
 
-	// TODO: Check if key fingerprint not exists, if not add new key to DO (or not! it should be already exists)
+	// Key should be exists on digitalocean.
 	if do.Project.PublicKey.Fingerprint != "" {
 		dropletRequest.SSHKeys = []godo.DropletCreateSSHKey{
 			godo.DropletCreateSSHKey{
@@ -206,7 +206,7 @@ func NewDigitalocean(p *internal.Project) (*Digitalocean, error) {
 
 	if _, ok := p.Config.Provider.Credentials["API_KEY"]; !ok {
 
-		return nil, errors.New("API_KEY is required!")
+		return nil, errors.New("API_KEY is required (export APKER_KEY=you_do_api_key).")
 	}
 
 	tokenSource := &TokenSource{
