@@ -53,7 +53,7 @@ func (d *Deployment) Run() (e error) {
 	}, ExecStep{
 		Done:    "Project cloned successfully on: /tmp/apker",
 		Label:   fmt.Sprintf("Cloning project repository: %s", d.Project.Repo),
-		Command: fmt.Sprintf("git clone %s /tmp/apker/", utils.UrlAuth(d.Project.Repo, d.Project.Auth)),
+		Command: fmt.Sprintf("rm -rf /tmp/apker && git clone %s /tmp/apker/", utils.UrlAuth(d.Project.Repo, d.Project.Auth)),
 	}, ExecStep{
 		Done:    "Apker directory created successfully.",
 		Label:   "Creating apker directory.",
@@ -93,7 +93,7 @@ func (d Deployment) exec(steps []ExecStep) (e error) {
 
 		if result, e = d.SSH.Run(fmt.Sprintf("env %s bash -c '%s'", env, step.Command)); e != nil {
 
-			d.StderrHandler(fmt.Sprintf("Label: %s\nEnv: %s\nCommand: %s", step.Label, env, step.Command), result)
+			d.StderrHandler(fmt.Sprintf("Label: %s\nCommand: %s", step.Label, step.Command), result)
 			return
 		}
 
@@ -132,7 +132,8 @@ func stepToCommand(step string) (c string, e error) {
 		break
 
 	case "action":
-		// c = fmt.Sprintf("cp /tmp/apker/%s /usr/share/apker/bin/%s && chmod +x /usr/share/apker/bin/%s", parts[0], parts[1], parts[1])
+		c = fmt.Sprintf("cp /tmp/apker/%s /usr/share/apker/bin/%s && chmod +x /usr/share/apker/bin/%s", parts[1], parts[2], parts[2])
+		return
 		break
 
 	case "reboot":
