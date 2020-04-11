@@ -12,9 +12,9 @@ import (
 	"time"
 
 	sp "github.com/briandowns/spinner"
-	"github.com/melbahja/goph"
 	"github.com/unleashable/apker/cmd/inputs"
 	"github.com/unleashable/apker/cmd/outputs"
+	. "github.com/unleashable/apker/cmd/utils"
 	"github.com/unleashable/apker/internal"
 	"github.com/unleashable/apker/internal/providers"
 	"github.com/unleashable/apker/internal/utils"
@@ -79,7 +79,7 @@ var DeployFlags = []cli.Flag{
 	&cli.StringFlag{
 		Name:    "addr",
 		Aliases: []string{"ip"},
-		Usage:   "Deploy on already exists machine ip address (provider custom only).",
+		Usage:   "Deploy on already exists machine ip address (custom provider).",
 	},
 }
 
@@ -138,6 +138,14 @@ RemoteGetYamlFile:
 		goto RemoteGetYamlFile
 	}
 
+	// Override provider name if ip flag has a value.
+	if c.String("addr") != "" {
+
+		if e = os.Setenv("APKER_PROVIDER", "custom"); e != nil {
+			return
+		}
+	}
+
 	// Load project config from apker.yaml
 	if project.Config, e = internal.LoadConfig(project.Temp, c.StringSlice("parameter")); e != nil {
 		return
@@ -159,7 +167,7 @@ RemoteGetYamlFile:
 	}
 
 	// Set auth method.
-	if e = setAuthMethod(&project, c); e != nil {
+	if e = SetAuthMethod(&project, c); e != nil {
 		return
 	}
 
@@ -335,8 +343,8 @@ func customDeploy(project *internal.Project, c *cli.Context) (e error) {
 
 func runDeploy(project *internal.Project, sp *sp.Spinner, events bool) (e error) {
 
-	// Deploy steps spinner!
-	sp.Suffix = " Running deploy steps..."
+	// Deploy spinner!
+	sp.Suffix = " Running deploy..."
 
 	e = project.Deploy(events, stdout(sp), stderr(sp), spinner(sp))
 
@@ -347,61 +355,6 @@ func runDeploy(project *internal.Project, sp *sp.Spinner, events bool) (e error)
 		outputs.Success("It's 👏 Deployed 👏 successfully🚀!", "")
 	}
 
-	return
-}
-
-func setAuthMethod(project *internal.Project, c *cli.Context) (e error) {
-
-	var pass string
-
-	if c.Bool("password") {
-
-		pass, e = inputs.Password("Enter ssh password", func(p string) error {
-
-			if len(p) < 1 {
-				return errors.New("Invalid password!")
-			}
-
-			return nil
-		})
-
-		if e != nil {
-			return
-		}
-
-		fmt.Println("")
-		project.SSHAuth = goph.Password(pass)
-		return
-	}
-
-	project.PublicKey.Fingerprint,
-		project.PublicKey.Path,
-		project.PrivateKey.Path,
-		e = utils.ResolveSSHKeys(c.String("pub"), c.String("key"))
-
-	if e != nil {
-		return
-	}
-
-	if c.Bool("passphrase") {
-
-		pass, e = inputs.Password("Enter private key passphrase", func(p string) error {
-
-			if utils.IsValidPassphrase(project.PrivateKey.Path, p) {
-				return nil
-			}
-
-			return errors.New("Invalid passphrase!")
-		})
-
-		if e != nil {
-			return
-		}
-
-		fmt.Println("")
-	}
-
-	project.SSHAuth = goph.Key(project.PrivateKey.Path, pass)
 	return
 }
 

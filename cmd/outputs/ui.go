@@ -2,6 +2,7 @@ package outputs
 
 import (
 	"fmt"
+
 	"github.com/melbahja/promptui"
 )
 
@@ -17,7 +18,7 @@ func Success(msg string, icon string) {
 func Input(msg string, icon string) {
 
 	if icon == "" {
-		icon = "🔑"
+		icon = "🗝"
 	}
 
 	fmt.Printf("%s: ", Render(icon, msg, true))

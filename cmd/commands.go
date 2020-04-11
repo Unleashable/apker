@@ -17,12 +17,6 @@ var Commands = []*cli.Command{
 		Flags:   actions.DeployFlags,
 	},
 	{
-		Name:    "list",
-		Aliases: []string{"ls"},
-		Usage:   "List machines.",
-		Action:  actions.List,
-	},
-	{
 		Name:   "run",
 		Usage:  "Run an action on remote machine.",
 		Action: actions.Run,

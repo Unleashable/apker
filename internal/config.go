@@ -46,14 +46,9 @@ func (c Config) Validate() error {
 	return checkSteps(c.Deploy.Steps)
 }
 
-func isRequired(k string) bool {
-
-	switch k {
-	case "APKER_PROVIDER":
-		return true
-	}
-
-	return false
+func (c Config) GetAction(name string) (val string) {
+	val, _ = c.Actions[name]
+	return
 }
 
 func parseParams(params []string) map[string]string {
@@ -79,7 +74,7 @@ func parseTpl(file string, name string, params []string) (c string, e error) {
 	paramsMap := parseParams(params)
 	tpl, e := template.New(name).Funcs(template.FuncMap{
 		"Env": func(key string) string {
-			return utils.Env(key, isRequired(key))
+			return utils.Env(key, false)
 		},
 		"Get": func(key string) string {
 
