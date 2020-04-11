@@ -2,6 +2,7 @@ package inputs
 
 import (
 	"fmt"
+
 	"github.com/unleashable/apker/cmd/outputs"
 	"golang.org/x/crypto/ssh/terminal"
 )
