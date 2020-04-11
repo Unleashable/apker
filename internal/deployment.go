@@ -47,19 +47,19 @@ func (d *Deployment) Run() (e error) {
 	}
 
 	steps = append(steps, ExecStep{
-		Done:    "Requirements: git and rsync installed.",
+		Done:    "Setup: git and rsync installed.",
 		Label:   "Verifying requirements...",
 		Command: "which git rsync && git --version && rsync --version",
 	}, ExecStep{
-		Done:    "Project cloned successfully on: /tmp/apker",
+		Done:    "Setup: project cloned on: /tmp/apker",
 		Label:   fmt.Sprintf("Cloning project repository: %s", d.Project.Repo),
 		Command: fmt.Sprintf("rm -rf /tmp/apker && git clone %s /tmp/apker/", utils.UrlAuth(d.Project.Repo, d.Project.Auth)),
 	}, ExecStep{
-		Done:    "Apker directory created successfully.",
+		Done:    "Setup: apker directory created.",
 		Label:   "Creating apker directory.",
 		Command: "mkdir -p /usr/share/apker/bin/",
 	}, ExecStep{
-		Done:    "Config file copied successfully.",
+		Done:    "Setup: config file created.",
 		Label:   "Coping config file",
 		Command: "cp /tmp/apker/apker.yaml /usr/share/apker/apker.yaml",
 	})
