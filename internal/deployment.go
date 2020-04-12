@@ -127,13 +127,17 @@ func stepToCommand(step string) (c string, e error) {
 		c = fmt.Sprintf("cd /tmp/apker && rsync -av --quiet %s %s", strconv.Quote(parts[1]), strconv.Quote(parts[2]))
 		break
 
-	case "mkdir":
+	case "dir":
 		c = fmt.Sprintf("mkdir -p %s", strings.Join(parts[1:], " "))
 		break
 
 	case "action":
-		c = fmt.Sprintf("cp /tmp/apker/%s /usr/share/apker/bin/%s && chmod +x /usr/share/apker/bin/%s", parts[1], parts[2], parts[2])
-		return
+		c = fmt.Sprintf(
+			"cp /tmp/apker/%s /usr/share/apker/bin/%s && chmod +x /usr/share/apker/bin/%s",
+			parts[1],
+			parts[2],
+			parts[2],
+		)
 		break
 
 	case "reboot":
