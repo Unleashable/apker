@@ -25,6 +25,4 @@ type Provider interface {
 
 	// Setup virtual machine on cloud provider
 	SetupMachine(chan MachineStatus, Attributes)
-
-	// List() []Machine
 }
