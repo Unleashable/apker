@@ -133,7 +133,7 @@ loop:
 
 		switch step[0] {
 
-		case "run", "copy", "action", "mkdir":
+		case "run", "copy", "action", "dir":
 			continue loop
 
 		case "reboot":
