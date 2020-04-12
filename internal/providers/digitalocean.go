@@ -167,15 +167,11 @@ func (do *Digitalocean) SetupMachine(ch chan internal.MachineStatus, attrs inter
 	}
 }
 
-func (do Digitalocean) CreateCustomImage(ImageRequest *godo.CustomImageCreateRequest) (*godo.Image, error) {
+func (do Digitalocean) CreateCustomImage(ImageRequest *godo.CustomImageCreateRequest) (image *godo.Image, err error) {
 
-	image, _, err := do.DoClient.Images.Create(context.TODO(), ImageRequest)
+	image, _, err = do.DoClient.Images.Create(context.TODO(), ImageRequest)
 
-	if err != nil {
-		return &godo.Image{}, err
-	}
-
-	return image, nil
+	return image, err
 }
 
 func (do *Digitalocean) CreateDroplet(image godo.DropletCreateImage) (*godo.Droplet, error) {
@@ -209,17 +205,13 @@ func NewDigitalocean(p *internal.Project) (*Digitalocean, error) {
 		return nil, errors.New("API_KEY is required (export APKER_KEY=you_do_api_key).")
 	}
 
-	tokenSource := &TokenSource{
+	oauth := oauth2.NewClient(context.Background(), &TokenSource{
 		AccessToken: p.Config.Provider.Credentials["API_KEY"],
-	}
+	})
 
-	oauth := oauth2.NewClient(context.Background(), tokenSource)
-
-	do := &Digitalocean{
+	return &Digitalocean{
 		Project:  p,
 		Oauth:    oauth,
 		DoClient: godo.NewClient(oauth),
-	}
-
-	return do, nil
+	}, nil
 }
