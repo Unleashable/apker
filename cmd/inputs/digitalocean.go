@@ -69,6 +69,9 @@ func DigitaloceanSelectSize(do *providers.Digitalocean) error {
 	prompt := promptui.Select{
 		Label: "• Select Size",
 		Items: items,
+		Templates: &promptui.SelectTemplates{
+			Selected: fmt.Sprintf(`{{ "%s" | green }} {{ "Size:" | faint }} {{ . | faint }}`, "✔"),
+		},
 	}
 
 	i, _, e := prompt.Run()
@@ -106,6 +109,9 @@ func DigitaloceanSelectRegion(do *providers.Digitalocean) error {
 	prompt := promptui.Select{
 		Label: "• Select Region",
 		Items: items,
+		Templates: &promptui.SelectTemplates{
+			Selected: fmt.Sprintf(`{{ "%s" | green }} {{ "Region:" | faint }} {{ . | faint }}`, "✔"),
+		},
 	}
 
 	i, _, e := prompt.Run()
