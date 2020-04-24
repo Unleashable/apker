@@ -5,6 +5,7 @@ package internal
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -56,12 +57,12 @@ func (d *Deployment) Run() (e error) {
 		Command: fmt.Sprintf("rm -rf /tmp/apker && git clone %s /tmp/apker/", utils.UrlAuth(d.Project.Repo, d.Project.Auth)),
 	}, ExecStep{
 		Done:    "Setup: apker directory created.",
-		Label:   "Creating apker directory.",
+		Label:   "Creating apker directory...",
 		Command: "mkdir -p /usr/share/apker/bin/",
 	}, ExecStep{
-		Done:    "Setup: config file created.",
-		Label:   "Coping config file",
-		Command: "cp /tmp/apker/apker.yaml /usr/share/apker/apker.yaml",
+		Done:    "Setup: apker actions created.",
+		Label:   "Creating actions...",
+		Command: "chmod +x /tmp/apker_actions.sh && /tmp/apker_actions.sh && chmod +x /usr/share/apker/bin/*",
 	})
 
 	for _, step := range d.Project.Config.Deploy.Steps {
@@ -87,6 +88,12 @@ func (d Deployment) exec(steps []ExecStep) (e error) {
 		result []byte
 	)
 
+	// Setup actions.
+	if e = d.setupActions(); e != nil {
+		d.StderrHandler(fmt.Sprintf("Setup actions error: %s", e.Error()), result)
+		return
+	}
+
 	for _, step := range steps {
 
 		d.InteractiveHandler(step.Label)
@@ -101,6 +108,36 @@ func (d Deployment) exec(steps []ExecStep) (e error) {
 	}
 
 	return
+}
+
+func (d Deployment) setupActions() error {
+
+	var err error
+
+	file, err := os.OpenFile(d.Project.Temp+"/actions.sh", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+
+	file.WriteString("#!/usr/bin/sh\n")
+
+	for name, command := range d.Project.Config.Actions {
+
+		_, err = file.WriteString(fmt.Sprintf(`cat > /usr/share/apker/bin/%s << EOL
+#!/usr/bin/sh
+%s
+EOL
+`, name, command))
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return d.SSH.Upload(d.Project.Temp+"/actions.sh", "/tmp/apker_actions.sh")
 }
 
 func envToString(vars map[string]string) string {
@@ -129,15 +166,6 @@ func stepToCommand(step string) (c string, e error) {
 
 	case "dir":
 		c = fmt.Sprintf("mkdir -p %s", strings.Join(parts[1:], " "))
-		break
-
-	case "action":
-		c = fmt.Sprintf(
-			"cp /tmp/apker/%s /usr/share/apker/bin/%s && chmod +x /usr/share/apker/bin/%s",
-			parts[1],
-			parts[2],
-			parts[2],
-		)
 		break
 
 	case "reboot":
