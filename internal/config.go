@@ -46,10 +46,6 @@ func (c Config) Validate() error {
 	return checkSteps(c.Deploy.Steps)
 }
 
-func (c Config) GetAction(name string) (val string) {
-	val, _ = c.Actions[name]
-	return
-}
 
 func parseParams(params []string) map[string]string {
 
@@ -133,7 +129,7 @@ loop:
 
 		switch step[0] {
 
-		case "run", "copy", "action", "dir":
+		case "run", "copy", "dir":
 			continue loop
 
 		case "reboot":
