@@ -79,7 +79,7 @@ var DeployFlags = []cli.Flag{
 	&cli.StringFlag{
 		Name:    "addr",
 		Aliases: []string{"ip"},
-		Usage:   "Deploy on already exists machine ip address (custom provider).",
+		Usage:   "Deploy on already exists machine ip address.",
 	},
 }
 
@@ -99,6 +99,7 @@ func Deploy(c *cli.Context) (e error) {
 		Repo: c.String("url"),
 		Name: c.String("name"),
 		User: c.String("user"),
+		Addr: c.String("addr"),
 		Auth: os.Getenv("APKER_AUTH"),
 	}
 
@@ -118,12 +119,9 @@ RemoteGetYamlFile:
 		}
 
 		// Save apker.yaml to temp file
-		if e = ioutil.WriteFile(project.Temp+"/apker.yaml", tmp, 0644); e != nil {
+		if e = ioutil.WriteFile(project.Temp+"/apker.yaml", tmp, 0600); e != nil {
 			return
 		}
-
-		// Change project path to temp
-		// project.Path = project.Temp
 
 	} else {
 
@@ -151,19 +149,14 @@ RemoteGetYamlFile:
 		return
 	}
 
-	// Project name fallback
-	if project.Name == "" && project.Config.Name != "" {
-		project.Name = "apker-image-" + project.Config.Name
-	}
-
-	if project.Config.Provider.Name != "custom" && c.String("addr") != "" {
-		e = errors.New("deployment to a ip address allowed only on custom provdier.")
-		return
-	}
-
 	// Validate config.
 	if e = project.Config.Validate(); e != nil {
 		return
+	}
+
+	// Project name fallback
+	if project.Name == "" && project.Config.Name != "" {
+		project.Name = "apker-" + project.Config.Name
 	}
 
 	// Set auth method.
