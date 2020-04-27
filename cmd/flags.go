@@ -4,8 +4,8 @@
 package cmd
 
 import (
-	"os"
 	"github.com/urfave/cli/v2"
+	"os"
 )
 
 // Global cli flags

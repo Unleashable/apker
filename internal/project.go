@@ -44,10 +44,10 @@ func (project *Project) Deploy(allowEvents bool, outHandler OutputHandler, errHa
 	}
 
 	deployment := &Deployment{
-		SSH:                client,
-		Project:            project,
-		StdoutHandler:      outHandler,
-		StderrHandler:      errHandler,
+		SSH:             client,
+		Project:         project,
+		StdoutHandler:   outHandler,
+		StderrHandler:   errHandler,
 		ProgressHandler: itHandler,
 	}
 

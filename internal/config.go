@@ -46,7 +46,6 @@ func (c Config) Validate() error {
 	return checkSteps(c.Deploy.Steps)
 }
 
-
 func parseParams(params []string) map[string]string {
 
 	paramsMap := make(map[string]string)

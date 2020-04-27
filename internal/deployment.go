@@ -24,10 +24,10 @@ type ExecStep struct {
 }
 
 type Deployment struct {
-	SSH                *goph.Client
-	Project            *Project
-	StdoutHandler      OutputHandler
-	StderrHandler      OutputHandler
+	SSH             *goph.Client
+	Project         *Project
+	StdoutHandler   OutputHandler
+	StderrHandler   OutputHandler
 	ProgressHandler ProgressHandler
 }
 
