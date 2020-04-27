@@ -31,7 +31,7 @@ type Project struct {
 	PrivateKey PrivateSSHKey
 }
 
-func (project *Project) Deploy(allowEvents bool, outHandler OutputHandler, errHandler OutputHandler, itHandler InteractiveHandler) error {
+func (project *Project) Deploy(allowEvents bool, outHandler OutputHandler, errHandler OutputHandler, itHandler ProgressHandler) error {
 
 	if project.User == "" {
 		project.User = "root"
@@ -48,7 +48,7 @@ func (project *Project) Deploy(allowEvents bool, outHandler OutputHandler, errHa
 		Project:            project,
 		StdoutHandler:      outHandler,
 		StderrHandler:      errHandler,
-		InteractiveHandler: itHandler,
+		ProgressHandler: itHandler,
 	}
 
 	var out []byte
