@@ -127,7 +127,7 @@ events:
 | `deploy.steps`         | List of deploy steps | Deployment steps                         | YES |
 | `actions`              | key: value | Actions to run later via `apker run`               | NO  |
 | `events.success` | bash command | Command to run on **host** machine after successful deployment. | NO |
-| `events.failure` | bash command | Command to run on **host** machine when failed deployment.      | NO |
+| `events.failure` | bash command | Command to run on **host** machine after deployment failure.      | NO |
 
 [1]: You can use remote url to build from your own custom images like: `https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-ec2-8.1.1911-20200113.3.x86_64.qcow2`
 
