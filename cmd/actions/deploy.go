@@ -339,7 +339,7 @@ func runDeploy(project *internal.Project, sp *sp.Spinner, events bool) (e error)
 	// Deploy spinner!
 	sp.Suffix = " Running deploy..."
 
-	e = project.Deploy(events, stdout(sp), stderr(sp), spinner(sp))
+	e = project.Deploy(events, stdout(sp), stderr(sp), progress(sp))
 
 	sp.Stop()
 
@@ -351,7 +351,7 @@ func runDeploy(project *internal.Project, sp *sp.Spinner, events bool) (e error)
 	return
 }
 
-func spinner(sp *sp.Spinner) internal.InteractiveHandler {
+func progress(sp *sp.Spinner) internal.ProgressHandler {
 
 	return func(log string) error {
 
