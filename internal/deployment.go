@@ -15,7 +15,7 @@ import (
 
 type OutputHandler func(description string, log []byte) error
 
-type InteractiveHandler func(log string) error
+type ProgressHandler func(log string) error
 
 type ExecStep struct {
 	Done    string
@@ -28,7 +28,7 @@ type Deployment struct {
 	Project            *Project
 	StdoutHandler      OutputHandler
 	StderrHandler      OutputHandler
-	InteractiveHandler InteractiveHandler
+	ProgressHandler ProgressHandler
 }
 
 func (d *Deployment) Run() (e error) {
@@ -96,7 +96,7 @@ func (d Deployment) exec(steps []ExecStep) (e error) {
 
 	for _, step := range steps {
 
-		d.InteractiveHandler(step.Label)
+		d.ProgressHandler(step.Label)
 
 		if result, e = d.SSH.Run(fmt.Sprintf("env %s bash -c '%s'", env, step.Command)); e != nil {
 
