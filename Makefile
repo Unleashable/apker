@@ -2,19 +2,21 @@
 
 LDFLAGS=-ldflags "-X=main.version=$(shell git describe --tags)"
 
-release: build-release installer
+build: clean
+	go build $(LDFLAGS) -o bin/apker
+
+release: buildrelease installer
 
 install:
-	go install $(LDFLAGS)
+	chmod +x bin/apker
+	mv bin/apker /usr/bin/apker
+	install -C autocomplete/bash /usr/share/bash-completion/completions/apker
 
 installer:
 	godownloader --repo=unleashable/apker > ./install.sh
 
-build-release: clean
+buildrelease: clean
 	goreleaser release --rm-dist
-
-build: clean
-	go build $(LDFLAGS) -o bin/apker
 
 clean:
 	rm -rf bin/
