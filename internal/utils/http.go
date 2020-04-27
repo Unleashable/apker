@@ -46,7 +46,7 @@ func IsUrl(u string) bool {
 func UrlAuth(url string, auth string) string {
 
 	if auth != "" {
-		return strings.Replace(url, "https://", "https://"+auth+"@", 1)
+		return strings.Replace(url, "https://", fmt.Sprintf("https://%s@", auth), 1)
 	}
 
 	return url
