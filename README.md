@@ -17,8 +17,7 @@
     <a href="#license">License</a>
 </p>
 
-![screenshot](https://github.com/unleashable/apker/raw/master/.github/images/demo.png)
-[Play](https://asciinema.org/a/TGa2tfGhFfVmtriuE51xwqFYM)
+[![Apker](https://github.com/unleashable/apker/raw/master/.github/images/demo.png)](https://asciinema.org/a/TGa2tfGhFfVmtriuE51xwqFYM)
 
 
 ## Installation
