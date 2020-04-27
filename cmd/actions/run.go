@@ -27,12 +27,6 @@ var RunFlags = []cli.Flag{
 		Usage: "Set ssh `user` name.",
 	},
 	&cli.StringFlag{
-		Name:    "key",
-		Value:   os.ExpandEnv("$HOME/.ssh/id_rsa"),
-		Usage:   "Set private key path.",
-		Aliases: []string{"i"},
-	},
-	&cli.StringFlag{
 		Name:  "knownhosts",
 		Usage: "knownhosts `file`.",
 		Value: os.ExpandEnv("$HOME/.ssh/known_hosts"),
