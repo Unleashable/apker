@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"os"
 	"github.com/urfave/cli/v2"
 )
 
@@ -12,11 +13,13 @@ var Flags = []cli.Flag{
 	&cli.StringFlag{
 		Name:    "pub",
 		Aliases: []string{"p"},
-		Usage:   "Set ssh public key (`public_key`)",
+		Value:   os.ExpandEnv("$HOME/.ssh/id_rsa.pub"),
+		Usage:   "Set ssh public key `path`",
 	},
 	&cli.StringFlag{
 		Name:    "key",
 		Aliases: []string{"i"},
-		Usage:   "Set ssh private key (`identity_file`)",
+		Value:   os.ExpandEnv("$HOME/.ssh/id_rsa"),
+		Usage:   "Set ssh private key `path`",
 	},
 }
