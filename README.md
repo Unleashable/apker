@@ -153,7 +153,7 @@ This is the: `deploy.steps` that you can use to build your image.
 |------|-------------|:--------|
 | `run`    | Run a shell command.               | `run: apt-get -y install nginx` |
 | `dir`    | Create a directory.                | `dir: /var/www/myapp/public` [1]  |
-| `copy`   | Copy file or directory.             |  `copy: . /var/www/myapp`      |
+| `copy`   | Copy file or directory.             |  `copy: . /var/www/myapp` [2]      |
 | `reboot` | Reboot the machine.                | `reboot`                    |
 
 [1]: Create a new directory equivalent to `mkdir -p`
