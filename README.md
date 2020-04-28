@@ -183,6 +183,11 @@ apker deploy --url https://github.com/username/repo --ip 127.0.0.1
 
 replace `127.0.0.1` with your instance public ip address.
 
+#### Private Repositories:
+Apker now supports github and bitbucket private repos, to deploy a project from a private repo just export `APKER_AUTH`  before running deploy:
+```bash
+export APKER_AUTH=your_github_token_or_bitbucket_token
+```
 
 WIP!
 
