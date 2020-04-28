@@ -11,7 +11,6 @@
 
 <p align="center">
     <a href="#installation">Installation</a> ❘
-    <a href="#how-it-works">How It Works</a> ❘
     <a href="#usage">Usage</a> ❘
     <a href="#contributing">Contributing</a> ❘
     <a href="#license">License</a>
@@ -62,8 +61,22 @@ Note: this requires golang.
 
 ### Quick Start:
 
-Deploy Apker Demo: [https://github.com/melbahja/apker-demo](https://github.com/melbahja/apker-demo/)
+Try Apker Demo: [https://github.com/melbahja/apker-demo](https://github.com/melbahja/apker-demo/)
 
+### Cli Tool:
+
+Type `--help` to see all available options and flags.
+
+```bash
+# global help
+apker --help
+
+# apker deploy help
+apker deploy --help
+
+# apker run help
+apker run --help
+```
 
 ### Apker File:
 
@@ -131,7 +144,7 @@ events:
 
 [1]: You can use remote url to build from your own custom images like: `https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-ec2-8.1.1911-20200113.3.x86_64.qcow2`
 
-[2]: AWS not supported yet, you can deploy only to Digitalocean. But you can deploy to Custom Provider.
+[2]: AWS not supported yet, you can deploy only to Digitalocean. But you can deploy to a Custom Provider.
 
 #### Deployment Steps:
 This is the: `deploy.steps` that you can use to build your image.
@@ -139,9 +152,36 @@ This is the: `deploy.steps` that you can use to build your image.
 | Name | Description | Example |
 |------|-------------|:--------|
 | `run`    | Run a shell command.               | `run: apt-get -y install nginx` |
-| `dir`    | Create a directory.                | `dir: /var/www/myapp/public`    |
-| `copy`   | Copy file or directory recursively |  `copy: . /var/www/myapp`       |
-| `reboot` | Reboot the machine.                | `reboot`                        |
+| `dir`    | Create a directory.                | `dir: /var/www/myapp/public` [1]  |
+| `copy`   | Copy file or directory.             |  `copy: . /var/www/myapp`      |
+| `reboot` | Reboot the machine.                | `reboot`                    |
+
+[1]: Create a new directory equivalent to `mkdir -p`
+
+[2]: Copy all repo content to `/var/www/myapp`
+
+### Deployment:
+
+Apker currently only supports digitalocean, to deploy your project you must export these env vars before running deploy command:
+```bash
+export APKER_PROVIDER=digitalocean
+export APKER_KEY=your_do_api_key_here
+```
+
+then use the `deploy` subcommand:
+```bash
+apker deploy --url https://github.com/username/repo
+```
+`username/repo` must have a valid `apker.yaml` file, and your public key must be in digitalocean keys.
+
+#### Deploy To A Custom Provider:
+If you want to deploy a project to unsupported cloud provider for example aws, just create a new instance based on the project distro `name` in the `apker.yaml` file, add your public ssh key to it and run the following command:
+
+```bash
+apker deploy --url https://github.com/username/repo --ip 127.0.0.1
+```
+
+replace `127.0.0.1` with your instance public ip address.
 
 
 WIP!
